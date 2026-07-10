@@ -1,0 +1,1 @@
+DOMAIN = "pastatoinfo_irtc"
