@@ -82,6 +82,19 @@ def _local_midnight_utc(day: date) -> datetime:
     )
 
 
+def _stat_start_utc(day: date) -> datetime:
+    """Timestamp for a statistics row covering the given local day/month.
+
+    01:00 local, NOT midnight: HA computes `change` over a calendar period as
+    sum(at end) - sum(at start), and a row stamped exactly at the period
+    boundary becomes the baseline — i.e. falls out of the period. One hour in,
+    the row stays inside its own day and month buckets everywhere.
+    """
+    return datetime(day.year, day.month, day.day, 1, tzinfo=PORTAL_TZ).astimezone(
+        dt_util.UTC
+    )
+
+
 class PastatoInfoCoordinator(DataUpdateCoordinator[dict]):
     """Runs the sync on a custom daily schedule and holds sensor values."""
 
@@ -199,7 +212,7 @@ class PastatoInfoCoordinator(DataUpdateCoordinator[dict]):
                     running_sum += value
                     rows.append(
                         StatisticData(
-                            start=_local_midnight_utc(day),
+                            start=_stat_start_utc(day),
                             state=value,
                             sum=running_sum,
                         )
@@ -216,7 +229,7 @@ class PastatoInfoCoordinator(DataUpdateCoordinator[dict]):
                 running_sum += value
                 rows.append(
                     StatisticData(
-                        start=_local_midnight_utc(month),
+                        start=_stat_start_utc(month),
                         state=value,
                         sum=running_sum,
                     )
