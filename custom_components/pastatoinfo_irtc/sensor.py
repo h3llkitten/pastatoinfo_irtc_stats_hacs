@@ -18,12 +18,10 @@ async def async_setup_entry(
     entities: list[SensorEntity] = []
     for object_id, object_name in coordinator.objects.items():
         for resource in coordinator.enabled_resources:
-            entities.append(
-                PastatoInfoSensor(coordinator, object_id, object_name, resource, "last_day")
-            )
-            entities.append(
-                PastatoInfoSensor(coordinator, object_id, object_name, resource, "month")
-            )
+            for kind in ("last_day", "month", "prev_month"):
+                entities.append(
+                    PastatoInfoSensor(coordinator, object_id, object_name, resource, kind)
+                )
     async_add_entities(entities)
 
 
@@ -49,10 +47,7 @@ class PastatoInfoSensor(CoordinatorEntity[PastatoInfoCoordinator], SensorEntity)
         self._attr_native_unit_of_measurement = resource.unit
         self._attr_icon = resource.icon
         self._attr_suggested_display_precision = 3 if resource.unit == "m³" else 0
-        if kind == "last_day":
-            self._attr_translation_key = f"{resource.key}_last_day"
-        else:
-            self._attr_translation_key = f"{resource.key}_month"
+        self._attr_translation_key = f"{resource.key}_{kind}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{entry_id}_{object_id}")},
             name=f"Pastatoinfo {object_name}",
@@ -73,6 +68,8 @@ class PastatoInfoSensor(CoordinatorEntity[PastatoInfoCoordinator], SensorEntity)
             return None
         if self._kind == "last_day":
             return values["last_day_value"]
+        if self._kind == "prev_month":
+            return values["prev_month_total"]
         return values["month_total"]
 
     @property
@@ -83,4 +80,6 @@ class PastatoInfoSensor(CoordinatorEntity[PastatoInfoCoordinator], SensorEntity)
         if self._kind == "last_day":
             day = values["last_day_date"]
             return {"date": day.isoformat() if day else None}
+        if self._kind == "prev_month":
+            return {"month": values["prev_month"]}
         return {"month": values["month"]}

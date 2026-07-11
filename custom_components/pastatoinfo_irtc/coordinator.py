@@ -65,6 +65,12 @@ def _next_month(month: date) -> date:
     return date(month.year, month.month + 1, 1)
 
 
+def _previous_month(month: date) -> date:
+    if month.month == 1:
+        return date(month.year - 1, 12, 1)
+    return date(month.year, month.month - 1, 1)
+
+
 def _months_between(first: date, last: date) -> list[date]:
     """Month-start dates from first to last inclusive."""
     months = []
@@ -255,11 +261,23 @@ class PastatoInfoCoordinator(DataUpdateCoordinator[dict]):
         if current_month_daily:
             last_day_value = current_month_daily[-1]
             last_day_date = current_month + timedelta(days=len(current_month_daily) - 1)
+
+        # Previous-month total for the sensor, from the (cached) yearly data.
+        prev_month = _previous_month(current_month)
+        cache_key = (object_id, resource.tipas, prev_month.year)
+        if cache_key not in yearly_cache:
+            yearly_cache[cache_key] = await self.client.async_get_yearly_usage(
+                object_id, resource.tipas, prev_month.year
+            )
+        prev_month_total = yearly_cache[cache_key].get(prev_month.month, 0.0)
+
         return {
             "month_total": round(month_total, 3),
             "month": current_month.strftime("%Y-%m"),
             "last_day_value": last_day_value,
             "last_day_date": last_day_date,
+            "prev_month_total": round(prev_month_total, 3),
+            "prev_month": prev_month.strftime("%Y-%m"),
         }
 
     async def _resume_point(
