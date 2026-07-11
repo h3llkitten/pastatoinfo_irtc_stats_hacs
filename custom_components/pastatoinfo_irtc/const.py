@@ -71,3 +71,12 @@ ALL_RESOURCES: tuple[Resource, ...] = (
     RESOURCE_HOT_WATER,
     RESOURCE_COLD_WATER,
 )
+
+
+def total_unique_id(entry_id: str, object_id: str, resource_key: str) -> str:
+    """Unique id of the running-total sensor whose entity_id backs the statistic.
+
+    Shared between sensor.py (creates the entity) and coordinator.py (looks up
+    its entity_id via the entity registry to import statistics onto it).
+    """
+    return f"{entry_id}_{object_id}_{resource_key}_total"

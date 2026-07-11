@@ -1,7 +1,7 @@
-"""Sensors: last-day and month-to-date consumption per object and resource."""
+"""Sensors: last-day, month-to-date, and running-total consumption."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -18,7 +18,7 @@ async def async_setup_entry(
     entities: list[SensorEntity] = []
     for object_id, object_name in coordinator.objects.items():
         for resource in coordinator.enabled_resources:
-            for kind in ("last_day", "month", "prev_month"):
+            for kind in ("last_day", "month", "prev_month", "total"):
                 entities.append(
                     PastatoInfoSensor(coordinator, object_id, object_name, resource, kind)
                 )
@@ -43,11 +43,21 @@ class PastatoInfoSensor(CoordinatorEntity[PastatoInfoCoordinator], SensorEntity)
         self._resource = resource
         self._kind = kind
         entry_id = coordinator.entry.entry_id
+        # kind="total" must match const.total_unique_id() exactly: the
+        # coordinator looks this entity up by unique_id to import statistics
+        # onto its entity_id (apexcharts-card requires a live entity, which a
+        # bare external statistic id can never be).
         self._attr_unique_id = f"{entry_id}_{object_id}_{resource.key}_{kind}"
         self._attr_native_unit_of_measurement = resource.unit
         self._attr_icon = resource.icon
         self._attr_suggested_display_precision = 3 if resource.unit == "m³" else 0
         self._attr_translation_key = f"{resource.key}_{kind}"
+        if kind == "total":
+            self._attr_device_class = (
+                SensorDeviceClass.ENERGY
+                if resource.is_heating
+                else SensorDeviceClass.WATER
+            )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{entry_id}_{object_id}")},
             name=f"Pastatoinfo {object_name}",
@@ -70,6 +80,8 @@ class PastatoInfoSensor(CoordinatorEntity[PastatoInfoCoordinator], SensorEntity)
             return values["last_day_value"]
         if self._kind == "prev_month":
             return values["prev_month_total"]
+        if self._kind == "total":
+            return values["total"]
         return values["month_total"]
 
     @property
@@ -82,4 +94,6 @@ class PastatoInfoSensor(CoordinatorEntity[PastatoInfoCoordinator], SensorEntity)
             return {"date": day.isoformat() if day else None}
         if self._kind == "prev_month":
             return {"month": values["prev_month"]}
+        if self._kind == "total":
+            return None
         return {"month": values["month"]}
