@@ -58,7 +58,6 @@ class PastatoInfoSensor(CoordinatorEntity[PastatoInfoCoordinator], SensorEntity)
             name=f"Pastatoinfo {object_name}",
             manufacturer="IRTC",
             configuration_url="https://pastatoinfo.irtc.lt",
-            via_device=(DOMAIN, entry_id),
         )
 
     @property

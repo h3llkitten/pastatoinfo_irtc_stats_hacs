@@ -26,9 +26,12 @@ class PastatoInfoResyncButton(ButtonEntity):
         self._coordinator = coordinator
         entry = coordinator.entry
         self._attr_unique_id = f"{entry.entry_id}_resync"
+        # Attach to the (first) object's device so the integration presents
+        # a single device per object instead of an extra account-level one.
+        first_object_id, first_object_name = next(iter(coordinator.objects.items()))
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name=entry.title,
+            identifiers={(DOMAIN, f"{entry.entry_id}_{first_object_id}")},
+            name=f"Pastatoinfo {first_object_name}",
             manufacturer="IRTC",
             configuration_url="https://pastatoinfo.irtc.lt",
         )
