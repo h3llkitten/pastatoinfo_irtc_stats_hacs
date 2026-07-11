@@ -37,11 +37,9 @@
     "step": {
       "init": {
         "title": "Pastatoinfo options",
+        "description": "Heating import can be disabled outside the heating season. Missed months are backfilled automatically when it is re-enabled.",
         "data": {
           "import_heating": "Import heating data"
-        },
-        "data_description": {
-          "import_heating": "Disable outside the heating season; missed months are backfilled automatically when re-enabled."
         }
       }
     }

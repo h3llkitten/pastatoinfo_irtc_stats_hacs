@@ -34,6 +34,7 @@ class Resource:
     key: str
     tipas: str
     unit: str
+    unit_class: str  # recorder statistics unit class ("energy" / "volume")
     name: str
     icon: str
     is_heating: bool = False
@@ -43,6 +44,7 @@ RESOURCE_HEATING = Resource(
     key="heating",
     tipas="SILUM_SK",
     unit="kWh",
+    unit_class="energy",
     name="Heating",
     icon="mdi:radiator",
     is_heating=True,
@@ -51,6 +53,7 @@ RESOURCE_HOT_WATER = Resource(
     key="hot_water",
     tipas="K_VAND_SK",
     unit="m³",
+    unit_class="volume",
     name="Hot water",
     icon="mdi:water-thermometer",
 )
@@ -58,6 +61,7 @@ RESOURCE_COLD_WATER = Resource(
     key="cold_water",
     tipas="S_VAND_SK",
     unit="m³",
+    unit_class="volume",
     name="Cold water",
     icon="mdi:water",
 )

@@ -247,6 +247,7 @@ class PastatoInfoCoordinator(DataUpdateCoordinator[dict]):
                 statistic_id=statistic_id,
                 name=f"{resource.name} {object_name}",
                 unit_of_measurement=resource.unit,
+                unit_class=resource.unit_class,
                 has_sum=True,
                 **_MEAN_KWARGS,
             )
