@@ -31,7 +31,7 @@ The config flow asks for:
 
 1. **Username / password** — your pastatoinfo.irtc.lt credentials. They are stored in the config entry and used to log in; the session cookie is persisted across restarts, with automatic re-login when it expires.
 2. **Objects** — the apartments/buildings found on your account; pick one, several, or all.
-3. **Confirmation** — historical consumption **starting from 2025-01** is imported on first sync. Past months come as monthly totals, the current month as daily values. A checkbox lets you disable heating import (e.g. off-season); it can be toggled later in the integration's options, and missed months are backfilled automatically when re-enabled.
+3. **Confirmation** — historical consumption **starting from 2025-01** is imported on first sync. Past months come as monthly totals, the current month and 2 preceding ones as daily values. Heating has no manual toggle: it syncs automatically during the legal Oct 1 – Apr 30 heating season (Lithuanian Heat Supply Law, buildings with automated heat-distribution points) and is skipped the rest of the year — the initial import always backfills it in full regardless of season, and any gap heals automatically once the season starts again.
 
 ## What you get
 
@@ -60,7 +60,7 @@ Monthly totals from 2025-01; daily resolution for the current month (and for any
 
 ### Sync schedule
 
-Once a day at a random moment between 02:11 and 03:11 UTC (randomized to avoid hammering the portal at a fixed second), plus one sync on Home Assistant startup. The sync is a single unified backfill: it looks at the last imported statistics row and fills everything from there, so downtime, heating toggled off/on, or a freshly wiped database all heal automatically.
+Once a day at a random moment between 02:11 and 03:11 UTC (randomized to avoid hammering the portal at a fixed second), plus one sync on Home Assistant startup. The sync is a single unified backfill: it looks at the last imported statistics row and fills everything from there, so downtime, the heating season starting again, or a freshly wiped database all heal automatically.
 
 ## Example dashboard cards
 

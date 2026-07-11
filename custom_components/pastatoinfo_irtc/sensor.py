@@ -7,7 +7,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, Resource
+from .const import ALL_RESOURCES, DOMAIN, Resource
 from .coordinator import PastatoInfoCoordinator
 
 
@@ -17,7 +17,7 @@ async def async_setup_entry(
     coordinator: PastatoInfoCoordinator = entry.runtime_data
     entities: list[SensorEntity] = []
     for object_id, object_name in coordinator.objects.items():
-        for resource in coordinator.enabled_resources:
+        for resource in ALL_RESOURCES:
             for kind in ("last_day", "month", "prev_month", "total"):
                 entities.append(
                     PastatoInfoSensor(coordinator, object_id, object_name, resource, kind)

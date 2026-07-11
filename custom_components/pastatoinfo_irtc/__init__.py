@@ -67,8 +67,6 @@ async def async_setup_entry(
 
     entry.async_create_background_task(hass, _startup_sync(), f"{DOMAIN}_startup_sync")
 
-    entry.async_on_unload(entry.add_update_listener(_async_options_updated))
-
     if not hass.services.has_service(DOMAIN, SERVICE_SYNC):
 
         async def _handle_sync(_call: ServiceCall) -> None:
@@ -78,12 +76,6 @@ async def async_setup_entry(
         hass.services.async_register(DOMAIN, SERVICE_SYNC, _handle_sync)
 
     return True
-
-
-async def _async_options_updated(
-    hass: HomeAssistant, entry: PastatoInfoConfigEntry
-) -> None:
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(

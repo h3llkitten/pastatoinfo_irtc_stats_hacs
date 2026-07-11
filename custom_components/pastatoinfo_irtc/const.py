@@ -7,7 +7,13 @@ DOMAIN = "pastatoinfo_irtc"
 
 CONF_DATABASE = "database"
 CONF_OBJECTS = "objects"
-CONF_IMPORT_HEATING = "import_heating"
+
+# Legal heating season for buildings with automated heat-distribution points
+# (Lithuanian Heat Supply Law amendment, effective 2026-10-01): Oct 1 - Apr 30.
+# This integration only ever sees data for such buildings, so heating sync is
+# gated on this fixed window instead of a manual toggle.
+HEATING_SEASON_START_MONTH = 10
+HEATING_SEASON_END_MONTH = 4
 
 # Fixed start of the historical import.
 HISTORY_START_YEAR = 2025

@@ -17,10 +17,7 @@
       },
       "confirm": {
         "title": "Confirm initial import",
-        "description": "Historical consumption starting from {start} will be imported for {count} object(s): {objects}. Past months are imported as monthly totals; the current month as daily values.",
-        "data": {
-          "import_heating": "Import heating data"
-        }
+        "description": "Historical consumption starting from {start} will be imported for {count} object(s): {objects}. Past months are imported as monthly totals; the current and 2 preceding months as daily values. Heating is synced automatically for the Oct 1 - Apr 30 heating season and skipped the rest of the year; the initial import always backfills it in full."
       }
     },
     "error": {
@@ -31,17 +28,6 @@
       "already_configured": "This account/database is already configured.",
       "cannot_connect": "Could not reach pastatoinfo.irtc.lt.",
       "no_objects": "No objects found for this account."
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Pastatoinfo options",
-        "description": "Heating import can be disabled outside the heating season. Missed months are backfilled automatically when it is re-enabled.",
-        "data": {
-          "import_heating": "Import heating data"
-        }
-      }
     }
   },
   "entity": {

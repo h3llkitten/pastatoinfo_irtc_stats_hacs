@@ -24,9 +24,10 @@ from homeassistant.util import dt as dt_util
 from .api import PastatoInfoClient, PastatoInfoError
 from .const import (
     ALL_RESOURCES,
-    CONF_IMPORT_HEATING,
     CONF_OBJECTS,
     DOMAIN,
+    HEATING_SEASON_END_MONTH,
+    HEATING_SEASON_START_MONTH,
     HISTORY_START_MONTH,
     HISTORY_START_YEAR,
     PORTAL_TIMEZONE,
@@ -104,6 +105,11 @@ def _stat_start_utc(day: date) -> datetime:
     )
 
 
+def _in_heating_season(day: date) -> bool:
+    """Whether the given date falls in the legal Oct 1 - Apr 30 heating season."""
+    return day.month >= HEATING_SEASON_START_MONTH or day.month <= HEATING_SEASON_END_MONTH
+
+
 class PastatoInfoCoordinator(DataUpdateCoordinator[dict]):
     """Runs the sync on a custom daily schedule and holds sensor values."""
 
@@ -129,15 +135,6 @@ class PastatoInfoCoordinator(DataUpdateCoordinator[dict]):
     @property
     def objects(self) -> dict[str, str]:
         return self.entry.data[CONF_OBJECTS]
-
-    @property
-    def enabled_resources(self) -> list[Resource]:
-        import_heating = self.entry.options.get(CONF_IMPORT_HEATING, True)
-        return [
-            resource
-            for resource in ALL_RESOURCES
-            if import_heating or not resource.is_heating
-        ]
 
     # --- scheduling -----------------------------------------------------
 
@@ -176,7 +173,7 @@ class PastatoInfoCoordinator(DataUpdateCoordinator[dict]):
         yearly_cache: dict[tuple[str, str, int], dict[int, float]] = {}
         try:
             for object_id, object_name in self.objects.items():
-                for resource in self.enabled_resources:
+                for resource in ALL_RESOURCES:
                     sensor_data[(object_id, resource.key)] = (
                         await self._sync_resource(
                             object_id, object_name, resource, yearly_cache
@@ -221,13 +218,32 @@ class PastatoInfoCoordinator(DataUpdateCoordinator[dict]):
         today = datetime.now(PORTAL_TZ).date()
         current_month = _month_start(today)
 
-        base_sum, first_month, daily_months = await self._resume_point(
+        base_sum, first_month, daily_months, is_initial = await self._resume_point(
             statistic_id, current_month
         )
+
+        if resource.is_heating and not is_initial and not _in_heating_season(today):
+            # Off-season and this object has already been backfilled at least
+            # once: skip the portal entirely, freeze at the last known values
+            # instead of going "unknown". The initial import always runs in
+            # full regardless of season (is_initial short-circuits this).
+            previous = (self.data or {}).get((object_id, resource.key))
+            if previous is not None:
+                return previous
+            return {
+                "month_total": None,
+                "month": None,
+                "last_day_value": None,
+                "last_day_date": None,
+                "prev_month_total": None,
+                "prev_month": None,
+                "total": None,
+            }
 
         rows: list[StatisticData] = []
         running_sum = base_sum
         current_month_daily: list[float] = []
+        month_totals: dict[date, float] = {}
 
         for month in _months_between(first_month, current_month):
             if month in daily_months:
@@ -250,6 +266,7 @@ class PastatoInfoCoordinator(DataUpdateCoordinator[dict]):
                     )
                 if month == current_month:
                     current_month_daily = daily
+                month_totals[month] = round(sum(daily), 3)
             else:
                 cache_key = (object_id, resource.tipas, month.year)
                 if cache_key not in yearly_cache:
@@ -265,6 +282,7 @@ class PastatoInfoCoordinator(DataUpdateCoordinator[dict]):
                         sum=running_sum,
                     )
                 )
+                month_totals[month] = value
 
         if rows:
             metadata = StatisticMetaData(
@@ -288,14 +306,15 @@ class PastatoInfoCoordinator(DataUpdateCoordinator[dict]):
             last_day_value = current_month_daily[-1]
             last_day_date = current_month + timedelta(days=len(current_month_daily) - 1)
 
-        # Previous-month total for the sensor, from the (cached) yearly data.
+        # Previous-month total for the sensor. Never hits the portal: either
+        # this run already touched that month above (in-memory), or it was
+        # fully synced on an earlier day and is read straight back from HA's
+        # own statistics for that entity.
         prev_month = _previous_month(current_month)
-        cache_key = (object_id, resource.tipas, prev_month.year)
-        if cache_key not in yearly_cache:
-            yearly_cache[cache_key] = await self.client.async_get_yearly_usage(
-                object_id, resource.tipas, prev_month.year
-            )
-        prev_month_total = yearly_cache[cache_key].get(prev_month.month, 0.0)
+        if prev_month in month_totals:
+            prev_month_total = month_totals[prev_month]
+        else:
+            prev_month_total = await self._stat_month_total(statistic_id, prev_month)
 
         return {
             "month_total": round(month_total, 3),
@@ -309,20 +328,33 @@ class PastatoInfoCoordinator(DataUpdateCoordinator[dict]):
 
     async def _resume_point(
         self, statistic_id: str, current_month: date
-    ) -> tuple[float, date, set[date]]:
+    ) -> tuple[float, date, set[date], bool]:
         """Determine where to resume the import.
 
-        Returns (base_sum, first month to import, set of months to import daily).
-        Idempotency: months already covered are re-imported only when they need
-        daily refinement; rows with matching start timestamps are overwritten.
+        Returns (base_sum, first month to import, set of months to import
+        daily, is_initial). Idempotency: months already covered are
+        re-imported only when they need daily refinement; rows with matching
+        start timestamps are overwritten.
         """
         recorder = get_instance(self.hass)
         last = await recorder.async_add_executor_job(
             get_last_statistics, self.hass, 1, statistic_id, True, {"state", "sum"}
         )
         if not last.get(statistic_id):
-            # Nothing imported yet: full history from the fixed start.
-            return 0.0, date(HISTORY_START_YEAR, HISTORY_START_MONTH, 1), {current_month}
+            # Nothing imported yet: full history from the fixed start, with
+            # daily granularity for the current month plus the 2 preceding
+            # ones (3 months total).
+            daily_months = {current_month}
+            month = current_month
+            for _ in range(2):
+                month = _previous_month(month)
+                daily_months.add(month)
+            return (
+                0.0,
+                date(HISTORY_START_YEAR, HISTORY_START_MONTH, 1),
+                daily_months,
+                True,
+            )
 
         last_row = last[statistic_id][0]
         last_start = last_row["start"]
@@ -350,7 +382,25 @@ class PastatoInfoCoordinator(DataUpdateCoordinator[dict]):
 
         # The month containing the last row is re-imported daily (finishes a
         # partial month / upgrades a monthly row); current month always daily.
-        return base_sum, last_month, {last_month, current_month}
+        return base_sum, last_month, {last_month, current_month}, False
+
+    async def _stat_month_total(self, statistic_id: str, month: date) -> float:
+        """Read a closed month's total straight from HA's own statistics."""
+        recorder = get_instance(self.hass)
+        month_rows = await recorder.async_add_executor_job(
+            statistics_during_period,
+            self.hass,
+            _local_midnight_utc(month),
+            _local_midnight_utc(_next_month(month)),
+            {statistic_id},
+            "month",
+            None,
+            {"change"},
+        )
+        rows = month_rows.get(statistic_id) or []
+        if not rows or rows[0].get("change") is None:
+            return 0.0
+        return round(rows[0]["change"], 3)
 
     async def _fetch_daily(
         self, object_id: str, resource: Resource, month: date

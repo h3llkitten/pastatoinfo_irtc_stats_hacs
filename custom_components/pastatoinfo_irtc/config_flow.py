@@ -9,7 +9,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.selector import (
     SelectSelector,
@@ -20,7 +19,6 @@ from homeassistant.helpers.selector import (
 from .api import PastatoInfoAuthError, PastatoInfoClient, PastatoInfoError
 from .const import (
     CONF_DATABASE,
-    CONF_IMPORT_HEATING,
     CONF_OBJECTS,
     DOMAIN,
     HISTORY_START_MONTH,
@@ -143,50 +141,14 @@ class PastatoInfoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_DATABASE: self._database,
                     CONF_OBJECTS: self._selected_objects,
                 },
-                options={
-                    CONF_IMPORT_HEATING: user_input[CONF_IMPORT_HEATING],
-                },
             )
 
         return self.async_show_form(
             step_id="confirm",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_IMPORT_HEATING, default=True): bool}
-            ),
+            data_schema=vol.Schema({}),
             description_placeholders={
                 "count": str(len(self._selected_objects)),
                 "objects": ", ".join(self._selected_objects.values()),
                 "start": f"{HISTORY_START_YEAR}-{HISTORY_START_MONTH:02d}",
             },
-        )
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> PastatoInfoOptionsFlow:
-        return PastatoInfoOptionsFlow()
-
-
-class PastatoInfoOptionsFlow(config_entries.OptionsFlow):
-    """Options: toggle heating import."""
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
-        if user_input is not None:
-            return self.async_create_entry(data=user_input)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_IMPORT_HEATING,
-                        default=self.config_entry.options.get(
-                            CONF_IMPORT_HEATING, True
-                        ),
-                    ): bool
-                }
-            ),
         )
