@@ -11,8 +11,10 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import aiohttp_client
 
+from homeassistant.helpers import device_registry as dr
+
 from .api import PastatoInfoClient
-from .const import CONF_DATABASE, DOMAIN, SERVICE_SYNC
+from .const import CONF_DATABASE, CONF_OBJECTS, DOMAIN, SERVICE_SYNC
 from .coordinator import PastatoInfoCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -89,6 +91,19 @@ async def async_unload_entry(
 ) -> bool:
     entry.runtime_data.cancel_daily_sync()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Allow deleting devices that no longer match a configured object."""
+    active = {
+        f"{entry.entry_id}_{object_id}" for object_id in entry.data[CONF_OBJECTS]
+    }
+    return not any(
+        domain == DOMAIN and identifier in active
+        for domain, identifier in device_entry.identifiers
+    )
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
