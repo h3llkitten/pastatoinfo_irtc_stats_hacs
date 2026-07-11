@@ -1,4 +1,6 @@
 CLAUDE.md
+local_test.py
+local_creds.json
 
 __pycache__/
 *.py[cod]
@@ -10,3 +12,4 @@ venv/
 .DS_Store
 *.log
 .pytest_cache/
+.playwright-mcp/

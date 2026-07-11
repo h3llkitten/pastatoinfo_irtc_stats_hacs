@@ -1,0 +1,75 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Pastatoinfo account",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
+      },
+      "database": {
+        "title": "Select database",
+        "description": "Your account has access to several databases. Pick the one holding your meter data.",
+        "data": {
+          "database": "Database"
+        }
+      },
+      "objects": {
+        "title": "Select objects",
+        "description": "Choose which objects (apartments/buildings) to sync.",
+        "data": {
+          "objects": "Objects"
+        }
+      },
+      "confirm": {
+        "title": "Confirm initial import",
+        "description": "Historical consumption starting from {start} will be imported for {count} object(s): {objects}. Past months are imported as monthly totals; the current month as daily values.",
+        "data": {
+          "import_heating": "Import heating data"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Login rejected — check username and password.",
+      "cannot_connect": "Could not reach pastatoinfo.irtc.lt."
+    },
+    "abort": {
+      "already_configured": "This account/database is already configured.",
+      "cannot_connect": "Could not reach pastatoinfo.irtc.lt.",
+      "no_objects": "No objects found for this account."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Pastatoinfo options",
+        "data": {
+          "import_heating": "Import heating data"
+        },
+        "data_description": {
+          "import_heating": "Disable outside the heating season; missed months are backfilled automatically when re-enabled."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "heating_last_day": { "name": "Heating last day" },
+      "heating_month": { "name": "Heating this month" },
+      "hot_water_last_day": { "name": "Hot water last day" },
+      "hot_water_month": { "name": "Hot water this month" },
+      "cold_water_last_day": { "name": "Cold water last day" },
+      "cold_water_month": { "name": "Cold water this month" }
+    },
+    "button": {
+      "resync": { "name": "Resync now" }
+    }
+  },
+  "services": {
+    "sync": {
+      "name": "Sync",
+      "description": "Run the portal sync and statistics backfill immediately for all configured accounts."
+    }
+  }
+}
