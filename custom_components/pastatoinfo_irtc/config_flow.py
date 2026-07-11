@@ -25,6 +25,7 @@ from .const import (
     DOMAIN,
     HISTORY_START_MONTH,
     HISTORY_START_YEAR,
+    PREFERRED_DATABASE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,9 +66,12 @@ class PastatoInfoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except aiohttp.ClientError:
                 errors["base"] = "cannot_connect"
             else:
-                if len(self._databases) > 1:
-                    return await self.async_step_database()
-                self._database = self._databases[0] if self._databases else None
+                # All meter data lives in NIS_VILNIUS; fall back to the only
+                # available database for accounts that don't have it.
+                if PREFERRED_DATABASE in self._databases:
+                    self._database = PREFERRED_DATABASE
+                else:
+                    self._database = self._databases[0] if self._databases else None
                 return await self._load_objects()
 
         return self.async_show_form(
@@ -79,27 +83,6 @@ class PastatoInfoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
-        )
-
-    async def async_step_database(
-        self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
-        if user_input is not None:
-            self._database = user_input[CONF_DATABASE]
-            return await self._load_objects()
-
-        return self.async_show_form(
-            step_id="database",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_DATABASE): SelectSelector(
-                        SelectSelectorConfig(
-                            options=self._databases,
-                            mode=SelectSelectorMode.DROPDOWN,
-                        )
-                    )
-                }
-            ),
         )
 
     async def _load_objects(self) -> config_entries.ConfigFlowResult:

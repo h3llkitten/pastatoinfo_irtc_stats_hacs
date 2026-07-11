@@ -8,13 +8,6 @@
           "password": "Password"
         }
       },
-      "database": {
-        "title": "Select database",
-        "description": "Your account has access to several databases. Pick the one holding your meter data.",
-        "data": {
-          "database": "Database"
-        }
-      },
       "objects": {
         "title": "Select objects",
         "description": "Choose which objects (apartments/buildings) to sync.",

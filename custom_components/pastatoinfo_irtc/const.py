@@ -21,6 +21,9 @@ SYNC_RANDOM_WINDOW_SEC = 3600
 # Portal data is bucketed in Lithuanian local days.
 PORTAL_TIMEZONE = "Europe/Vilnius"
 
+# All meter data (heating + both waters) lives in this database; never ask.
+PREFERRED_DATABASE = "NIS_VILNIUS"
+
 SERVICE_SYNC = "sync"
 
 
