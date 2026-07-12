@@ -35,15 +35,12 @@
       "heating_last_day": { "name": "Heating last day" },
       "heating_month": { "name": "Heating this month" },
       "heating_prev_month": { "name": "Heating last month" },
-      "heating_total": { "name": "Heating total" },
       "hot_water_last_day": { "name": "Hot water last day" },
       "hot_water_month": { "name": "Hot water this month" },
       "hot_water_prev_month": { "name": "Hot water last month" },
-      "hot_water_total": { "name": "Hot water total" },
       "cold_water_last_day": { "name": "Cold water last day" },
       "cold_water_month": { "name": "Cold water this month" },
-      "cold_water_prev_month": { "name": "Cold water last month" },
-      "cold_water_total": { "name": "Cold water total" }
+      "cold_water_prev_month": { "name": "Cold water last month" }
     },
     "button": {
       "resync": { "name": "Resync now" }

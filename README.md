@@ -64,7 +64,7 @@ Once a day at a random moment between 02:11 and 03:11 UTC (randomized to avoid h
 
 ## Example dashboard cards
 
-Daily bars for the last month:
+The built-in `statistics-graph` card works out of the box:
 
 ```yaml
 type: statistics-graph
@@ -77,8 +77,6 @@ period: day
 days_to_show: 31
 ```
 
-Monthly bars since the import start:
-
 ```yaml
 type: statistics-graph
 title: Heating, kWh
@@ -88,6 +86,28 @@ stat_types: [change]
 chart_type: bar
 period: month
 days_to_show: 600
+```
+
+Its water values are rounded to 2 decimals with no way to configure that (a hard-coded HA frontend default for external, entity-less statistics).
+
+> **⚠️ `apexcharts-card` does not work with this integration's statistics, and never will.** Its series config hard-requires a live entity (`hass.states[entity]` — checked directly in the card's own source, no bypass), but this integration's statistics are external (`pastatoinfo_irtc:*`, no corresponding entity — see "Long-term statistics" above for why). This is a confirmed upstream limitation, not a bug on our side: [apexcharts-card#707](https://github.com/RomRider/apexcharts-card/issues/707) ("Support of statistics without state entities" — the exact same scenario, filed against utility-style integrations like `opower`) was closed by the maintainer as **not planned**. Don't spend time debugging an apexcharts-card config against this integration's statistic ids — use `plotly-graph-card` instead, below.
+
+For full-precision graphs, use **[`plotly-graph-card`](https://github.com/dbuezas/lovelace-plotly-graph-card)** (HACS) — verified working end-to-end with this integration's statistics. It queries `recorder/statistics_during_period` directly by statistic id, with no live-entity requirement:
+
+```yaml
+type: custom:plotly-graph
+entities:
+  - entity: pastatoinfo_irtc:cold_water_<objectId>
+    statistic: sum
+    period: day
+    filters:
+      - delta # turns the cumulative "sum" column into a per-day value
+    texttemplate: "%{y:.3f}"
+    hovertemplate: "%{y:.3f} m³<extra></extra>"
+layout:
+  yaxis:
+    tickformat: ".3f"
+hours_to_show: 31d
 ```
 
 For "this month / last month" tiles use the integration's sensors with regular `tile` cards. (Avoid the `statistic` card with this integration's data: with sparse rows — one per day/month — its period-change math drops the first row of the period.)

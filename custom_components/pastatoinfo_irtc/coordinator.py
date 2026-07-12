@@ -8,15 +8,13 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from homeassistant.components.recorder import get_instance
-from homeassistant.components.recorder.const import DOMAIN as RECORDER_DOMAIN
 from homeassistant.components.recorder.statistics import (
-    async_import_statistics,
+    async_add_external_statistics,
     get_last_statistics,
     statistics_during_period,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -35,7 +33,6 @@ from .const import (
     SYNC_MINUTE_UTC,
     SYNC_RANDOM_WINDOW_SEC,
     Resource,
-    total_unique_id,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -192,28 +189,7 @@ class PastatoInfoCoordinator(DataUpdateCoordinator[dict]):
         yearly_cache: dict,
     ) -> dict:
         """Backfill statistics for one object+resource; return sensor values."""
-        entity_registry = er.async_get(self.hass)
-        unique_id = total_unique_id(self.entry.entry_id, object_id, resource.key)
-        statistic_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
-        if statistic_id is None:
-            # The "total" sensor entity (which the statistic is imported onto)
-            # is set up by the sensor platform before the first sync ever
-            # runs, so this should not happen — but skip cleanly if it does,
-            # rather than import statistics under a made-up id.
-            _LOGGER.warning(
-                "Total sensor for %s/%s not registered yet, skipping this cycle",
-                object_id,
-                resource.key,
-            )
-            return {
-                "month_total": None,
-                "month": None,
-                "last_day_value": None,
-                "last_day_date": None,
-                "prev_month_total": None,
-                "prev_month": None,
-                "total": None,
-            }
+        statistic_id = f"{DOMAIN}:{resource.key}_{object_id}"
 
         today = datetime.now(PORTAL_TZ).date()
         current_month = _month_start(today)
@@ -237,7 +213,6 @@ class PastatoInfoCoordinator(DataUpdateCoordinator[dict]):
                 "last_day_date": None,
                 "prev_month_total": None,
                 "prev_month": None,
-                "total": None,
             }
 
         rows: list[StatisticData] = []
@@ -286,7 +261,7 @@ class PastatoInfoCoordinator(DataUpdateCoordinator[dict]):
 
         if rows:
             metadata = StatisticMetaData(
-                source=RECORDER_DOMAIN,
+                source=DOMAIN,
                 statistic_id=statistic_id,
                 name=f"{resource.name} {object_name}",
                 unit_of_measurement=resource.unit,
@@ -294,7 +269,7 @@ class PastatoInfoCoordinator(DataUpdateCoordinator[dict]):
                 has_sum=True,
                 **_MEAN_KWARGS,
             )
-            async_import_statistics(self.hass, metadata, rows)
+            async_add_external_statistics(self.hass, metadata, rows)
             _LOGGER.debug(
                 "%s: imported %d rows (from %s)", statistic_id, len(rows), first_month
             )
@@ -323,7 +298,6 @@ class PastatoInfoCoordinator(DataUpdateCoordinator[dict]):
             "last_day_date": last_day_date,
             "prev_month_total": round(prev_month_total, 3),
             "prev_month": prev_month.strftime("%Y-%m"),
-            "total": round(running_sum, 3),
         }
 
     async def _resume_point(
