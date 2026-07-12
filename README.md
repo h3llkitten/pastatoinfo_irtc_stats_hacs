@@ -104,11 +104,19 @@ entities:
     period: day
     filters:
       - delta # turns the cumulative "sum" column into a per-day value
-    texttemplate: "%{y:.3f}"
-    hovertemplate: "%{y:.3f} m³<extra></extra>"
+    type: bar
+    marker:
+      color: "rgba(66, 105, 208, 0.5)" # matches the native statistics-graph bar color
+      cornerradius: 4
+    hovertemplate: "%{x|%b %d, %Y}<br>%{y:.3f} m³<extra></extra>"
 layout:
   yaxis:
     tickformat: ".3f"
+  paper_bgcolor: "rgba(0,0,0,0)"
+  plot_bgcolor: "rgba(0,0,0,0)"
+  bargap: 0.4
+  dragmode: false
+  height: 300
 hours_to_show: 31d
 ```
 
