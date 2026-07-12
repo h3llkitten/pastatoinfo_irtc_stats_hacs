@@ -2,6 +2,8 @@
 
 *README updated: 2026-07-12*
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A Home Assistant custom integration (HACS-installable) that logs into [pastatoinfo.irtc.lt](https://pastatoinfo.irtc.lt) — the building-information portal operated by IRTC (Informatikos ir ryšių technologijų centras, Lithuania) — and imports your apartment's utility consumption into Home Assistant:
 
 - **Heating** (kWh)
