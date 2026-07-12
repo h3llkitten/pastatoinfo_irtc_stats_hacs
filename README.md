@@ -112,12 +112,16 @@ entities:
 layout:
   yaxis:
     tickformat: ".3f"
-  paper_bgcolor: "rgba(0,0,0,0)"
-  plot_bgcolor: "rgba(0,0,0,0)"
+  paper_bgcolor: "rgba(10, 10, 10, 0.4)" # matches the default ha-card background
+  plot_bgcolor: "rgba(0,0,0,0)" # transparent so it doesn't stack a second tint under the bars
   bargap: 0.4
-  dragmode: false
+  dragmode: pan
   height: 300
-hours_to_show: 31d
+card_mod:
+  style: |
+    .nsewdrag { cursor: pointer !important; }
+    .drag { cursor: pointer !important; }
+hours_to_show: 10d
 ```
 
 For "this month / last month" tiles use the integration's sensors with regular `tile` cards. (Avoid the `statistic` card with this integration's data: with sparse rows — one per day/month — its period-change math drops the first row of the period.)
