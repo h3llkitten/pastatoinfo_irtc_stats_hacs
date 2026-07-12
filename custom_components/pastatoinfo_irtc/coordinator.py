@@ -206,13 +206,16 @@ class PastatoInfoCoordinator(DataUpdateCoordinator[dict]):
             previous = (self.data or {}).get((object_id, resource.key))
             if previous is not None:
                 return previous
+            # No in-memory value yet either (e.g. right after an HA restart,
+            # off-season): 0 is the actual truth here, not "unknown".
+            prev_month = _previous_month(current_month)
             return {
-                "month_total": None,
-                "month": None,
-                "last_day_value": None,
+                "month_total": 0,
+                "month": current_month.strftime("%Y-%m"),
+                "last_day_value": 0,
                 "last_day_date": None,
-                "prev_month_total": None,
-                "prev_month": None,
+                "prev_month_total": 0,
+                "prev_month": prev_month.strftime("%Y-%m"),
             }
 
         rows: list[StatisticData] = []
