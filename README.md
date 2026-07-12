@@ -12,7 +12,7 @@ The portal has **no official public API**. This integration replays the AJAX cal
 
 ## ⚠️ Status / disclaimers
 
-- **Experimental. Not yet reviewed or tested by a human end-to-end** beyond one real account — treat it accordingly.
+- **Experimental.** Basic smoke-tested end-to-end by a human on one real account (install, initial import, dashboard, resync) — but not through extended real-world use yet, so treat it accordingly.
 - **Not tested with more than one object (apartment) per account.** Multi-object support is designed in (the config flow lets you pick several), but has never run against a real multi-object account.
 - Tested only with accounts whose data lives in the `NIS_VILNIUS` portal database (auto-selected; falls back to the account's only database).
 - Portal data is **daily, with a 1–2 day lag**. This is not a real-time meter.
