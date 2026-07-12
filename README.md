@@ -20,7 +20,7 @@ The portal has **no official public API**. This integration replays the AJAX cal
 ## Installation (HACS)
 
 1. HACS → three-dot menu → **Custom repositories**.
-2. Repository: `h3llkitten/pastatoinfo_irtc_stats_hacs`, type: **Integration** → Add.
+2. Repository: [`h3llkitten/pastatoinfo_irtc_stats_hacs`](https://github.com/h3llkitten/pastatoinfo_irtc_stats_hacs), type: **Integration** → Add.
 3. Find **Pastatoinfo IRTC** in HACS, **Download** it.
 4. Restart Home Assistant.
 5. Settings → Devices & services → **Add integration** → search **Pastatoinfo IRTC**.
