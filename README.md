@@ -62,7 +62,7 @@ Monthly totals from 2025-01; daily resolution for the current month (and for any
 
 ### Sync schedule
 
-Once a day at a random moment between 02:11 and 03:11 UTC (randomized to avoid hammering the portal at a fixed second), plus one sync on Home Assistant startup. The sync is a single unified backfill: it looks at the last imported statistics row and fills everything from there, so downtime, the heating season starting again, or a freshly wiped database all heal automatically.
+Once a day at a random moment between 17:15 and 17:45 UTC (randomized to avoid hammering the portal at a fixed second; timed for when the portal's data was observed to actually update, in the evening rather than the morning), plus one sync on Home Assistant startup. The sync is a single unified backfill: it looks at the last imported statistics row and fills everything from there, so downtime, the heating season starting again, or a freshly wiped database all heal automatically.
 
 ## Example dashboard cards
 

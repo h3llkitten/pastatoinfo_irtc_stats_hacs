@@ -136,7 +136,7 @@ class PastatoInfoCoordinator(DataUpdateCoordinator[dict]):
     # --- scheduling -----------------------------------------------------
 
     def schedule_daily_sync(self) -> None:
-        """(Re)schedule the next run at 02:11 UTC + random 0-60 min."""
+        """(Re)schedule the next run at 17:15 UTC + random 0-30 min."""
         self.cancel_daily_sync()
         now = dt_util.utcnow()
         base = now.replace(

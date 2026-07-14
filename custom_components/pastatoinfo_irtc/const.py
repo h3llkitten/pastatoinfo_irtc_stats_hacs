@@ -19,10 +19,12 @@ HEATING_SEASON_END_MONTH = 4
 HISTORY_START_YEAR = 2025
 HISTORY_START_MONTH = 1
 
-# Daily sync anchor: 02:11 UTC + random offset within an hour.
-SYNC_HOUR_UTC = 2
-SYNC_MINUTE_UTC = 11
-SYNC_RANDOM_WINDOW_SEC = 3600
+# Daily sync anchor: 17:15 UTC + random offset within 30 minutes.
+# Portal data was observed to actually update around 20:00 Vilnius time
+# (evening, not morning), which is 17:00-18:00 UTC depending on DST.
+SYNC_HOUR_UTC = 17
+SYNC_MINUTE_UTC = 15
+SYNC_RANDOM_WINDOW_SEC = 1800
 
 # Portal data is bucketed in Lithuanian local days.
 PORTAL_TIMEZONE = "Europe/Vilnius"
